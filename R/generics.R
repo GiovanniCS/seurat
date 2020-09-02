@@ -359,6 +359,34 @@ FindNeighbors <- function(object, ...) {
   UseMethod(generic = 'FindNeighbors', object = object)
 }
 
+#' SNN Graph Construction
+#'
+#' Constructs a Shared Nearest Neighbor (SNN) Graph for a given dataset. We
+#' first determine the k-nearest neighbors of each spot (pca + phisical distance between spots). 
+#' We use this knn graph to construct the SNN graph by calculating the neighborhood overlap
+#' (Jaccard index) between every spot and its k.param nearest neighbors.
+#'
+#' @param object An object
+#' @param ... Arguments passed to other methods
+#'
+#' @return When running on a \code{\link{Seurat}} object, returns fills the
+#' \code{graphs} slot; names of graphs can be found with
+#' \code{Filter(function(x) inherits(object[[x]], "Graph"), names(object))}
+#'
+#' @examples
+#' pbmc_small
+#' 
+#' # We build the SNN on the pca of the data such (ex. 10 principle components).
+#'
+#' pbmc_small <- FindSpatialNeighbors(pbmc_small, dims = 1:10, spots.coordinates = coord)
+#'
+#' @rdname FindSpatialNeighbors
+#' @export FindSpatialNeighbors
+#'
+FindSpatialNeighbors <- function(object, ...) {
+  UseMethod(generic = 'FindSpatialNeighbors', object = object)
+}
+
 #' Find variable features
 #'
 #' Identifies features that are outliers on a 'mean variability plot'.

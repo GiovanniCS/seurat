@@ -486,6 +486,44 @@ FindNeighbors.Seurat <- function(
   return(object)
 }
 
+
+#' @param spots.coordinates nSpots x 2 matrix or dataframe with the coordinates of each spot
+#' @param profileDistance integer. Param of the minkowski distance between transcriptional profiles
+#' @param spotDistance integer. Param of the minkowski distance between spot positions
+#' @param spotDistanceTransformationWeight double in [0,1]. Weight for the linear transormation of spot distance.
+#'  1 means spot distance weight as much as profile distance, 0 means spot distance doesn't contribute at all in the overall 
+#'  distance measure.
+#' @param dims Dimensions of reduction to use as input
+#' @param do.plot Plot SNN graph on tSNE coordinates
+#'
+#' @rdname FindSpatialNeighbors
+#' @export
+#' @method FindSpatialNeighbors Seurat
+#'
+FindSpatialNeighbors.Seurat <- function(
+  object,
+  spots.coordinates,
+  profileDistance = 2,
+  spotDistance = 2,
+  spotDistanceTransformationWeight = 1,
+  dims = 1:10
+){
+  d <- dim(spots.coordinates)[2]
+  if(d < 2){
+    stop("spots.coordinates needs to have exactly 2 columns")
+  }
+  spots.coordinates <- spots.coordinates[,(d-1):d]
+  spots.coordinates <- spots.coordinates[sort(rownames(spots.coordinates)),]
+  m = object@reductions[["pca"]]@cell.embeddings[,dims]
+  distPCA = dist(m,method="minkowski",p=as.numeric(profileDistance))  
+  distCoord <- dist(tissuePosition,method="minkowski",p=as.numeric(spotDistance))
+  distCoord <- distCoord*((max(distPCA)*as.double(spotDistanceTransformationWeight))/(max(distCoord)))
+  finalDistance <- as.matrix(distPCA + distCoord)
+  neighbors <- FindNeighbors(finalDistance)
+  neighbors <- list(neighbors_nn=neighbors$nn,neighbors_snn=neighbors$snn)
+  object@graphs <- neighbors
+  return(object)
+}
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Internal
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
